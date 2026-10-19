@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { --radius: 0.75rem; }
+* { border-color: rgb(226 232 240); }
+html { scroll-behavior: smooth; }
+body { background: #F7F9FC; color: #0F2A4A; font-family: Tajawal, system-ui, sans-serif; }
+::selection { background: #C9A227; color: white; }
+/* h-13 utility used by large buttons */
+.h-13 { height: 3.25rem; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+select, textarea { font-family: inherit; }
+input[type="file"]::file-selector-button { font-family: inherit; font-weight: 700; }
