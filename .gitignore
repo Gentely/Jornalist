@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# UNPUBLISHED research inventory — keep private.
+# Never commit finished research texts to this (public) repository:
+# upload them to Supabase Storage private bucket "research-files" instead.
+/research-library/
