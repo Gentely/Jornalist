@@ -1,50 +1,78 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Award, BookOpenCheck, CheckCircle2, FileText, GraduationCap, Landmark, PenLine, Quote, Search, ShieldCheck, Star, UploadCloud, Users } from "lucide-react";
+import {
+  ArrowLeft,
+  BookOpenCheck,
+  CheckCircle2,
+  FileText,
+  GraduationCap,
+  HeartPulse,
+  Landmark,
+  Languages,
+  PenLine,
+  ShieldCheck,
+  Stethoscope,
+  UploadCloud,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import ResearchCard from "@/components/ResearchCard";
+import { ResearchListItem } from "@/components/ResearchCard";
 import BankAccountDialog from "@/components/BankAccountDialog";
 import { WhatsAppIcon } from "@/components/WhatsAppFloat";
-import { CATEGORIES, RESEARCHES, TESTIMONIALS } from "@/lib/data";
+import { RESEARCHES } from "@/lib/data";
 import { whatsappLink } from "@/lib/utils";
 import { SITE } from "@/lib/constants";
 
+const GROUP_CARDS = [
+  { label: "بحوث طبية عامة", href: `/shop?group=${encodeURIComponent("بحوث طبية عامة")}`, icon: Stethoscope, note: "الصحة العامة وطب الأسرة والأمراض المزمنة" },
+  { label: "أمراض السرطان", href: `/shop?group=${encodeURIComponent("أمراض السرطان")}`, icon: HeartPulse, note: "الرئة والبروستاتا والثدي والكشف المبكر والعلاج" },
+  { label: "TESOL — اللغة الإنجليزية", href: `/shop?group=${encodeURIComponent("TESOL — اللغة الإنجليزية")}`, icon: Languages, note: "مناهج تعليم الإنجليزية وتقنيات تعلم المفردات" },
+];
+
 export default function HomePage() {
-  const featured = RESEARCHES.filter((r) => r.featured);
-  const best = RESEARCHES.filter((r) => r.bestSeller);
   return (
     <>
-      {/* ===== HERO ===== */}
       <section className="relative overflow-hidden bg-navy-900 text-white">
         <div className="absolute inset-0 opacity-20" style={{ background: "radial-gradient(700px 320px at 85% 10%, #C9A22766, transparent 60%), radial-gradient(600px 300px at 10% 90%, #2563EB55, transparent 60%)" }} />
-        <div className="relative mx-auto max-w-7xl px-4 py-16 lg:py-24 grid lg:grid-cols-[1.15fr_.85fr] gap-12 items-center">
+        <div className="relative mx-auto grid max-w-7xl items-center gap-12 px-4 py-14 lg:grid-cols-[1.1fr_.9fr] lg:py-20">
           <div>
-            <Badge variant="gold" className="mb-5 text-xs px-3 py-1">🎓 منصة ليبية من صبراتة — بإدارة محمد أحمد محمد</Badge>
-            <h1 className="text-3xl sm:text-5xl font-black leading-[1.35]">آلاف البحوث الجاهزة والموثقة<br /><span className="text-gold-400">لطلبة الماجستير والدكتوراه</span></h1>
-            <p className="mt-5 text-slate-300 leading-8 text-base sm:text-lg max-w-2xl">بحوث ورسائل علمية بصيغ PDF و Word قابلة للتعديل، موثقة بمراجع حديثة من جامعات ليبية معتمدة. ادفع بالتحويل المصرفي أو أتمم طلبك عبر واتساب خلال دقائق.</p>
+            <Badge variant="gold" className="mb-5 px-3 py-1 text-xs">منصة ليبية من صبراتة — بإدارة محمد أحمد محمد</Badge>
+            <h1 className="text-3xl font-black leading-[1.45] sm:text-5xl">
+              بحوث علمية موثقة
+              <span className="block text-gold-400">بغلاف واضح ونبذة قبل الطلب</span>
+            </h1>
+            <p className="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
+              تصفح قائمة بسيطة من البحوث الطبية وبحوث السرطان وTESOL. لكل بحث صورة غلاف وعنوان ونبذة مختصرة ومختصر علمي كامل، وبعد قراءته يمكنك الطلب والدفع بالتحويل المصرفي أو واتساب.
+            </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" variant="gold"><Link href="/shop"><Search /> تصفح المكتبة <ArrowLeft /></Link></Button>
-              <Button asChild size="lg" variant="whatsapp"><a href={whatsappLink("مرحباً، أحتاج مساعدة في اختيار بحث")} target="_blank" rel="noreferrer"><WhatsAppIcon className="h-5 w-5" /> استشرنا واتساب</a></Button>
+              <Button asChild size="lg" variant="gold"><Link href="#research-list"><BookOpenCheck /> شاهد قائمة البحوث <ArrowLeft /></Link></Button>
+              <Button asChild size="lg" variant="whatsapp"><a href={whatsappLink("مرحباً، أحتاج مساعدة في اختيار بحث من القائمة")} target="_blank" rel="noreferrer"><WhatsAppIcon className="h-5 w-5" /> اسألنا واتساب</a></Button>
               <BankAccountDialog size="lg" className="bg-white" />
             </div>
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-300">
-              {["مراجع موثقة APA", "تسليم فوري بعد الاعتماد", "دعم ليبي بالعربية"].map((t) => <span key={t} className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-green-400" /> {t}</span>)}
+            <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-300">
+              {["نبذة قبل الدفع", "مراجع موثقة داخل كل بحث", "ملفات Word قابلة للتعديل"].map((text) => (
+                <span key={text} className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-green-400" /> {text}</span>
+              ))}
             </div>
           </div>
+
           <div className="hidden lg:block">
-            <div className="rounded-3xl bg-white/10 border border-white/15 backdrop-blur p-6 shadow-2xl">
-              <p className="font-black text-lg mb-4 flex items-center gap-2"><BookOpenCheck className="text-gold-400" /> أحدث الإضافات هذا الأسبوع</p>
+            <div className="rounded-3xl border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur">
+              <p className="mb-4 flex items-center gap-2 text-lg font-black"><BookOpenCheck className="text-gold-400" /> الدفعة الأولى المتاحة الآن</p>
               <div className="space-y-3">
-                {RESEARCHES.slice(0, 3).map((r) => (
-                  <Link key={r.id} href={`/product/${r.id}`} className="flex items-center gap-3 rounded-2xl bg-white/10 hover:bg-white/20 transition p-3.5">
-                    <span className={`h-11 w-11 shrink-0 rounded-xl flex items-center justify-center font-black text-xs ${r.fileType === "PDF" ? "bg-red-600" : "bg-blue-600"}`}>{r.fileType === "PDF" ? "PDF" : "DOC"}</span>
-                    <span className="min-w-0"><span className="block font-bold text-sm leading-6 line-clamp-2">{r.title}</span><span className="text-xs text-slate-300">{r.university} • {r.priceLYD} د.ل</span></span>
+                {RESEARCHES.slice(0, 3).map((research) => (
+                  <Link key={research.id} href={`/product/${research.id}`} className="flex items-center gap-3 rounded-2xl bg-white/10 p-3 transition hover:bg-white/20">
+                    <span className="relative h-16 w-12 shrink-0 overflow-hidden rounded-lg"><Image src={research.cover} alt="" fill sizes="48px" className="object-cover object-top" /></span>
+                    <span className="min-w-0">
+                      <span dir="auto" className="block text-sm font-bold leading-6 line-clamp-2">{research.title}</span>
+                      <span className="text-xs text-slate-300">{research.group} • {research.priceLYD} د.ل</span>
+                    </span>
                   </Link>
                 ))}
               </div>
-              <div className="grid grid-cols-3 gap-3 mt-5 text-center">
-                {[["+1,200","بحث ورسالة"],["+4,800","طالب وباحث"],["4.8/5","تقييم العملاء"]].map(([n,l]) => (
-                  <div key={l} className="rounded-2xl bg-navy-900/60 py-3"><p className="font-black text-gold-400">{n}</p><p className="text-[11px] text-slate-300 mt-0.5">{l}</p></div>
+              <div className="mt-5 grid grid-cols-3 gap-3 text-center">
+                {[["7", "بحوث كاملة"], ["3", "مجالات رئيسية"], ["Word", "قابل للتعديل"]].map(([number, label]) => (
+                  <div key={label} className="rounded-2xl bg-navy-900/60 py-3"><p className="font-black text-gold-400">{number}</p><p className="mt-0.5 text-[11px] text-slate-300">{label}</p></div>
                 ))}
               </div>
             </div>
@@ -52,86 +80,91 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== STATS ===== */}
-      <section className="mx-auto max-w-7xl px-4 -mt-2 pt-10">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[{i:BookOpenCheck,n:"+1,200",l:"بحث جاهز وموثق"},{i:Users,n:"+4,800",l:"طالب وباحث"},{i:GraduationCap,n:"8",l:"جامعات ليبية"},{i:Award,n:"98%",l:"رضا العملاء"}].map(({i:Icon,n,l}) => (
-            <div key={l} className="rounded-2xl bg-white border shadow-card p-5 flex items-center gap-4"><span className="h-12 w-12 rounded-2xl bg-navy-50 text-navy-800 flex items-center justify-center shrink-0"><Icon className="h-6 w-6" /></span><div><p className="text-2xl font-black text-navy-900">{n}</p><p className="text-xs text-slate-500 font-bold">{l}</p></div></div>
+      <section className="mx-auto max-w-6xl px-4 pt-10" aria-label="ملخص الدفعة الحالية">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[
+            { icon: BookOpenCheck, number: String(RESEARCHES.length), label: "بحوث ظاهرة في القائمة" },
+            { icon: Stethoscope, number: "2", label: "بحوث طبية عامة" },
+            { icon: HeartPulse, number: "3", label: "بحوث أمراض سرطان" },
+            { icon: Languages, number: "2", label: "بحوث TESOL بالإنجليزية" },
+          ].map(({ icon: Icon, number, label }) => (
+            <div key={label} className="flex items-center gap-4 rounded-2xl border bg-white p-5 shadow-card">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-navy-50 text-navy-800"><Icon className="h-6 w-6" /></span>
+              <div><p className="text-2xl font-black text-navy-900">{number}</p><p className="text-xs font-bold text-slate-500">{label}</p></div>
+            </div>
           ))}
         </div>
       </section>
 
-      {/* ===== CATEGORIES ===== */}
-      <section className="mx-auto max-w-7xl px-4 mt-14">
-        <div className="flex items-end justify-between mb-6"><div><h2 className="text-2xl sm:text-3xl font-black text-navy-900">تصفح حسب التخصص</h2><p className="text-slate-500 mt-1 text-sm">10 تخصصات أكاديمية رئيسية</p></div><Link href="/shop" className="font-bold text-navy-700 text-sm hover:underline shrink-0">عرض الكل ←</Link></div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {CATEGORIES.map((c, i) => (
-            <Link key={c} href={`/shop?category=${encodeURIComponent(c)}`} className="rounded-2xl bg-white border p-5 text-center hover:shadow-soft hover:border-navy-600/30 transition group">
-              <span className="text-3xl block mb-2 group-hover:scale-110 transition">{["⚖️","🩺","🏗️","💻","📊","📚","💰","🏛️","🕌","📰"][i]}</span>
-              <span className="font-black text-sm text-navy-900">{c}</span>
-              <span className="block text-[11px] text-slate-400 mt-1">{RESEARCHES.filter(r=>r.category===c).length}+ بحث في العرض التجريبي</span>
+      <section className="mx-auto max-w-6xl px-4 mt-12">
+        <div className="mb-5 flex items-end justify-between gap-3">
+          <div><h2 className="text-2xl font-black text-navy-900 sm:text-3xl">اختر المجال الذي يناسبك</h2><p className="mt-1 text-sm text-slate-500">ثلاثة اختيارات فقط، من دون قوائم معقدة.</p></div>
+          <Link href="/shop" className="shrink-0 text-sm font-bold text-navy-700 hover:underline">عرض القائمة كاملة ←</Link>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {GROUP_CARDS.map(({ label, href, icon: Icon, note }) => (
+            <Link key={label} href={href} className="rounded-3xl border bg-white p-6 shadow-card transition hover:-translate-y-0.5 hover:shadow-soft">
+              <Icon className="mb-4 h-9 w-9 text-gold-600" />
+              <h3 className="text-lg font-black text-navy-900">{label}</h3>
+              <p className="mt-2 text-sm leading-7 text-slate-500">{note}</p>
+              <p className="mt-3 text-xs font-black text-navy-700">{RESEARCHES.filter((research) => research.group === label).length} بحوث متاحة الآن ←</p>
             </Link>
           ))}
         </div>
       </section>
 
-      {/* ===== FEATURED ===== */}
-      <section className="mx-auto max-w-7xl px-4 mt-16">
-        <h2 className="text-2xl sm:text-3xl font-black text-navy-900 mb-1">بحوث مميزة مختارة</h2>
-        <p className="text-slate-500 text-sm mb-6">الأعلى تقييماً من طلبة الدراسات العليا في ليبيا • الأسعار بالدينار الليبي (LYD)</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{featured.map((r) => <ResearchCard key={r.id} r={r} />)}</div>
+      {/* القائمة الرئيسة المطلوبة: غلاف + عنوان + نبذة + طلب، بحث تحت الآخر */}
+      <section id="research-list" className="mx-auto max-w-6xl scroll-mt-28 px-4 mt-14" aria-labelledby="research-list-title">
+        <div className="text-center">
+          <Badge variant="gold">الدفعة الأولى</Badge>
+          <h2 id="research-list-title" className="mt-3 text-2xl font-black text-navy-900 sm:text-3xl">قائمة البحوث المتتالية</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+            كل بحث مستقل في سطر واضح: شاهد الغلاف، واقرأ العنوان والنبذة، وافتح المختصر الكامل إذا رغبت، ثم استخدم أزرار الطلب والدفع الموجودة أسفل النبذة مباشرة.
+          </p>
+        </div>
+        <div className="mt-7 space-y-5">
+          {RESEARCHES.map((research) => <ResearchListItem key={research.id} r={research} />)}
+        </div>
       </section>
 
-      {/* ===== HOW IT WORKS ===== */}
-      <section className="mx-auto max-w-7xl px-4 mt-16">
-        <div className="rounded-3xl bg-navy-800 text-white p-7 sm:p-10">
-          <h2 className="text-2xl sm:text-3xl font-black mb-2">كيف تشتري بحثك؟</h2>
-          <p className="text-slate-300 text-sm mb-8">أربع خطوات فقط — بالتحويل المصرفي أو عبر واتساب</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <section className="mx-auto max-w-6xl px-4 mt-14">
+        <div className="rounded-3xl bg-navy-800 p-7 text-white sm:p-10">
+          <h2 className="text-2xl font-black sm:text-3xl">كيف تطلب وتدفع؟</h2>
+          <p className="mb-8 mt-2 text-sm text-slate-300">أربع خطوات قصيرة بعد قراءة المختصر.</p>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              {i:Search,t:"اختر البحث",d:"تصفح المكتبة وفلتر بالتخصص والجامعة ونوع الملف PDF أو Word"},
-              {i:Landmark,t:"افتح «حساب الدفع»",d:"اضغط الزر لتظهر لك بيانات الحساب داخل نافذة آمنة وانسخ الرقم"},
-              {i:UploadCloud,t:"حوّل وارفع الإيصال",d:"حوّل المبلغ من مصرفك وارفع صورة الإيصال — يصبح طلبك «قيد المراجعة»"},
-              {i:ShieldCheck,t:"اعتماد ثم تحميل",d:"نراجع إيصالك ونعتمد الطلب ليفتح لك رابط التحميل فوراً"},
-            ].map(({i:Icon,t,d}, idx) => (
-              <div key={t} className="rounded-2xl bg-white/10 border border-white/10 p-5">
-                <div className="flex items-center justify-between mb-3"><span className="h-11 w-11 rounded-xl bg-gold-500 text-white flex items-center justify-center"><Icon className="h-5 w-5" /></span><span className="text-4xl font-black text-white/15">{idx+1}</span></div>
-                <h3 className="font-black mb-1.5">{t}</h3><p className="text-sm text-slate-300 leading-7">{d}</p>
+              { icon: BookOpenCheck, title: "شاهد واقرأ", text: "راجع صورة الغلاف والعنوان والنبذة والمختصر العلمي ومحتويات البحث." },
+              { icon: Landmark, title: "اختر الدفع", text: "اضغط «حساب الدفع» للتحويل المصرفي، أو الزر الأخضر لإتمام الطلب عبر واتساب." },
+              { icon: UploadCloud, title: "ارفع الإيصال", text: "بعد التحويل أرفق صورة إيصال واضحة، وسيصبح الطلب «قيد المراجعة»." },
+              { icon: ShieldCheck, title: "الاعتماد والتسليم", text: "نراجع الإيصال، وبعد الاعتماد يتم تسليم ملف Word الكامل وفق بيانات التواصل." },
+            ].map(({ icon: Icon, title, text }, index) => (
+              <div key={title} className="rounded-2xl border border-white/10 bg-white/10 p-5">
+                <div className="mb-3 flex items-center justify-between"><span className="flex h-11 w-11 items-center justify-center rounded-xl bg-gold-500 text-white"><Icon className="h-5 w-5" /></span><span className="text-4xl font-black text-white/15">{index + 1}</span></div>
+                <h3 className="mb-1.5 font-black">{title}</h3><p className="text-sm leading-7 text-slate-300">{text}</p>
               </div>
             ))}
           </div>
           <div className="mt-7 flex flex-wrap gap-3">
             <BankAccountDialog className="bg-white" />
-            <Button asChild variant="whatsapp"><a href={whatsappLink("مرحباً، أريد إتمام طلب عبر واتساب")} target="_blank" rel="noreferrer"><WhatsAppIcon /> أو أتمم طلبك عبر واتساب {SITE.whatsappDisplay}</a></Button>
+            <Button asChild variant="whatsapp"><a href={whatsappLink("مرحباً، قرأت نبذة بحث وأريد إتمام طلب عبر واتساب")} target="_blank" rel="noreferrer"><WhatsAppIcon /> إتمام الطلب عبر واتساب {SITE.whatsappDisplay}</a></Button>
           </div>
         </div>
       </section>
 
-      {/* ===== BEST SELLERS ===== */}
-      <section className="mx-auto max-w-7xl px-4 mt-16">
-        <h2 className="text-2xl sm:text-3xl font-black text-navy-900 mb-6">الأكثر مبيعاً</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{best.map((r) => <ResearchCard key={r.id} r={r} />)}</div>
-        <div className="text-center mt-8"><Button asChild size="lg" variant="outline"><Link href="/shop">عرض كل البحوث (20 في النسخة التجريبية) <ArrowLeft /></Link></Button></div>
-      </section>
-
-      {/* ===== CUSTOM CTA + TESTIMONIALS ===== */}
-      <section className="mx-auto max-w-7xl px-4 mt-16 grid lg:grid-cols-2 gap-5">
-        <div className="rounded-3xl bg-gradient-to-br from-gold-500 to-amber-600 text-white p-8">
-          <PenLine className="h-10 w-10 mb-4" />
-          <h2 className="text-2xl font-black mb-2">لم تجد موضوعك؟ نكتبه لك خصيصاً</h2>
-          <p className="text-white/90 leading-8 text-sm mb-6">أرسل العنوان والتخصص وعدد الصفحات وموعد التسليم، وسنرد عليك بعرض سعر عبر واتساب. كتابة أكاديمية أصلية من الصفر.</p>
+      <section className="mx-auto grid max-w-6xl gap-5 px-4 mt-14 lg:grid-cols-2">
+        <div className="rounded-3xl bg-gradient-to-br from-gold-500 to-amber-600 p-8 text-white">
+          <PenLine className="mb-4 h-10 w-10" />
+          <h2 className="mb-2 text-2xl font-black">موضوعك ليس داخل القائمة؟</h2>
+          <p className="mb-6 text-sm leading-8 text-white/90">أرسل العنوان والتخصص وعدد الصفحات وموعد التسليم المطلوب. سنرسل لك عرضاً واضحاً على واتساب قبل أن تدفع أي مبلغ.</p>
           <Button asChild className="bg-white text-amber-700 hover:bg-amber-50"><Link href="/custom-request">اطلب بحثاً مخصصاً <ArrowLeft /></Link></Button>
         </div>
-        <div className="rounded-3xl bg-white border shadow-card p-8">
-          <h2 className="text-2xl font-black text-navy-900 mb-5 flex items-center gap-2"><Quote className="text-gold-500" /> ماذا قال طلابنا؟</h2>
-          <div className="space-y-4">
-            {TESTIMONIALS.map((t) => (
-              <blockquote key={t.name} className="rounded-2xl bg-slate-50 p-4">
-                <div className="flex gap-0.5 mb-1.5">{[...Array(5)].map((_,i)=><Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}</div>
-                <p className="text-sm leading-7 text-slate-700">“{t.text}”</p><cite className="text-xs font-bold text-slate-500 not-italic">— {t.name}</cite>
-              </blockquote>
+        <div className="rounded-3xl border bg-white p-8 shadow-card">
+          <h2 className="flex items-center gap-2 text-2xl font-black text-navy-900"><GraduationCap className="text-gold-600" /> ماذا يشمل كل بحث؟</h2>
+          <ul className="mt-5 space-y-3 text-sm font-bold leading-7 text-slate-600">
+            {["مستخلص عربي ومستخلص إنجليزي", "مقدمة وأسئلة بحث ومنهجية مراجعة أدبية", "محاور تحليلية ومناقشة وحدود للدراسة", "خاتمة وتوصيات وقائمة مراجع موثقة", "ملف Word منسق يمكن تعديله وطباعته"].map((item) => (
+              <li key={item} className="flex items-start gap-2"><FileText className="mt-1 h-4 w-4 shrink-0 text-green-600" /> {item}</li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
     </>

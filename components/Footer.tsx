@@ -12,7 +12,7 @@ export default function Footer() {
             <span className="h-11 w-11 rounded-2xl bg-white/10 text-gold-400 flex items-center justify-center"><BookOpenCheck className="h-6 w-6" /></span>
             <div><p className="text-xl font-black text-white">Journalist</p><p className="text-xs text-slate-400">منصة البحوث العلمية</p></div>
           </div>
-          <p className="text-sm leading-7 text-slate-300">بحوث PDF و Word موثقة من جامعات ليبية، لطلبة الماجستير والدكتوراه والبكالوريوس. بإدارة {SITE.owner}</p>
+          <p className="text-sm leading-7 text-slate-300">بحوث Word موثقة في الطب العام وأمراض السرطان وTESOL، تعرض بغلاف ونبذة واضحة قبل الطلب. بإدارة {SITE.owner}</p>
         </div>
         <div>
           <h3 className="font-black text-white mb-4">روابط سريعة</h3>

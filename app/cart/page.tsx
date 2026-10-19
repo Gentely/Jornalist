@@ -21,7 +21,7 @@ export default function CartPage() {
             {items.map((r) => (
               <div key={r.id} className="rounded-2xl bg-white border shadow-card p-4 flex items-center gap-4">
                 <span className={`h-14 w-14 shrink-0 rounded-2xl flex items-center justify-center text-white font-black text-xs bg-gradient-to-br ${r.gradient}`}>{r.fileType === "PDF" ? "PDF" : "DOC"}</span>
-                <div className="min-w-0 flex-1"><Link href={`/product/${r.id}`} className="font-black text-navy-900 text-sm leading-6 line-clamp-2 hover:underline">{r.title}</Link><p className="text-xs text-slate-500 mt-0.5">{r.university} • {r.fileType}</p></div>
+                <div className="min-w-0 flex-1"><Link href={`/product/${r.id}`} className="font-black text-navy-900 text-sm leading-6 line-clamp-2 hover:underline"><span dir="auto">{r.title}</span></Link><p className="text-xs text-slate-500 mt-0.5">{r.summary ? <span className="line-clamp-2">{r.summary}</span> : `${r.university} • ${r.fileType}`}</p></div>
                 <span className="font-black text-navy-800 shrink-0">{formatLYD(r.priceLYD)}</span>
                 <button onClick={() => remove(r.id)} aria-label="حذف" className="h-9 w-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center shrink-0"><Trash2 className="h-4 w-4" /></button>
               </div>
