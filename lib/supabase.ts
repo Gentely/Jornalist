@@ -12,7 +12,7 @@ const publicKey =
  * Only a Publishable/legacy anon key may be used here; a secret key must
  * never be placed in a NEXT_PUBLIC_* variable. When env vars are missing the
  * app runs in demo mode with local data so `npm run dev` works out of the box.
- * See supabase/schema.sql to go live.
+ * See DEPLOY-VERCEL-SUPABASE.md and supabase/migrations/ to go live.
  */
 export const isSupabaseConfigured = Boolean(
   url &&

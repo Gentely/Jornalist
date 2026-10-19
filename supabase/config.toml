@@ -1,0 +1,56 @@
+# Supabase configuration for Journalist.
+#
+# The production database is deployed from supabase/migrations by the
+# Supabase GitHub integration. In Project Settings > Integrations > GitHub,
+# use this repository, production branch `main`, working directory `.`, and
+# enable "Deploy to production".
+#
+# Keep this file intentionally small: omitted API/Auth/Realtime settings use
+# the hosted project's existing settings instead of overwriting them.
+project_id = "journalist-research"
+
+[db.migrations]
+enabled = true
+schema_paths = []
+
+# Batch 01 catalogue rows are shipped as a production migration, not as a
+# local-only seed file.
+[db.seed]
+enabled = false
+sql_paths = []
+
+[storage]
+enabled = true
+file_size_limit = "50MiB"
+
+# Public research cover images. The website can continue serving the current
+# copies from Vercel/public while this bucket is prepared for DB-driven use.
+[storage.buckets.covers]
+public = true
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/jpeg", "image/png", "image/webp", "image/avif"]
+
+# Paid DOCX/PDF research files. This bucket must stay private; downloads must
+# use short-lived signed URLs after an order is approved.
+[storage.buckets.research-files]
+public = false
+file_size_limit = "50MiB"
+allowed_mime_types = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+]
+
+# Customer bank-transfer receipts. This bucket must stay private.
+[storage.buckets.receipts]
+public = false
+file_size_limit = "10MiB"
+allowed_mime_types = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "image/heic",
+  "image/heif",
+  "application/pdf",
+]
