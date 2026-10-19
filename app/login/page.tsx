@@ -16,7 +16,7 @@ export default function LoginPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy(true); setMsg("");
     if (!isSupabaseConfigured || !supabase) {
-      setMsg("وضع تجريبي: لم يتم ربط Supabase بعد. ضع بيانات مشروعك في .env.local (راجع .env.example و supabase/schema.sql) وسيعمل تسجيل الدخول/الإنشاء فوراً. تصفح المكتبة والشراء يعملان دون حساب.");
+      setMsg("وضع تجريبي: لم يتم ربط Supabase بعد. ضع بيانات مشروعك في .env.local (راجع .env.example ودليل النشر وملفات supabase/migrations) وسيعمل تسجيل الدخول/الإنشاء فوراً. تصفح المكتبة والشراء يعملان دون حساب.");
       setBusy(false); return;
     }
     const res = mode === "login" ? await supabase.auth.signInWithPassword({ email, password }) : await supabase.auth.signUp({ email, password });

@@ -168,7 +168,7 @@ export default function AdminPage() {
             <div className="sm:col-span-2"><Label>ملخص البحث</Label><textarea rows={3} value={f.abstract} onChange={(e) => setF({ ...f, abstract: e.target.value })} className="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-navy-600/30" placeholder="مستخلص قصير..." /></div>
           </div>
           <Button type="submit" size="lg" className="mt-5"><Plus /> نشر البحث في المكتبة</Button>
-          <p className="text-[11px] text-slate-400 font-bold mt-3">في الإنتاج: يُرفع الغلاف إلى bucket «covers» والملف إلى bucket «research-files» في Supabase Storage (انظر supabase/schema.sql).</p>
+          <p className="text-[11px] text-slate-400 font-bold mt-3">في الإنتاج: يُرفع الغلاف إلى bucket «covers» والملف إلى bucket «research-files» في Supabase Storage (انظر supabase/config.toml وملفات migrations).</p>
         </form>
       )}
 

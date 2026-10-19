@@ -59,14 +59,14 @@ npm run start
 
 📚 **الدفعة الأولى:** 7 مراجعات أدبية كاملة (بحثان طب عام، و3 سرطانات، وبحثا TESOL) بأسعار مقترحة 110–140 د.ل. بيانات العرض والأغلفة في `lib/data.ts` و`public/covers/`؛ أما ملفات Word الكاملة فتُحفظ خصوصاً خارج GitHub وترفع إلى Supabase Storage الخاص.
 
-📘 **النشر والربط:** اتبع `DEPLOY-VERCEL-SUPABASE.md` خطوة بخطوة، وبذرة البحوث في `supabase/seed-researches.sql`.
+📘 **النشر والربط:** اتبع `DEPLOY-VERCEL-SUPABASE.md` خطوة بخطوة. قاعدة البيانات وبحوث الدفعة الأولى موجودة الآن كملفات **Supabase migrations** داخل `supabase/migrations/`، فلا حاجة إلى نسخ SQL يدوياً.
 
 ## 🗄️ Supabase (للانتقال للإنتاج)
 
-1. أنشئ مشروعاً في [supabase.com](https://supabase.com) ونفّذ `supabase/schema.sql` في SQL Editor.
-2. أنشئ Storage buckets: `covers` (عام)، `research-files` (خاص)، `receipts` (خاص).
+1. أنشئ مشروعاً في [supabase.com](https://supabase.com)، ثم من **Project Settings → Integrations → GitHub** اربطه بالمستودع، واجعل فرع الإنتاج `main` وWorking directory هو `.`، وفعّل **Deploy to production**. عند دمج ملفات `supabase/migrations/` إلى `main` تُنشأ الجداول وسياسات RLS وتُدخل البحوث السبعة تلقائياً.
+2. حاويات Storage معرّفة في `supabase/config.toml`: `covers` (عام)، `research-files` (خاص)، `receipts` (خاص). تحقق من ظهورها بعد نجاح نشر Supabase.
 3. انسخ `.env.example` إلى `.env.local` وضع `NEXT_PUBLIC_SUPABASE_URL` و`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ويدعم الكود أيضاً `NEXT_PUBLIC_SUPABASE_ANON_KEY` للمشاريع القديمة).
-4. بعده يعمل تسجيل الدخول فوراً؛ والتحميلات تُقدَّم بروابط موقّعة بعد اعتماد الطلب.
+4. بعده يعمل تسجيل الدخول فوراً، وينشئ الترحيل صفاً تلقائياً لكل مستخدم جديد في `public.profiles`. التحميلات المدفوعة يجب أن تُقدَّم لاحقاً بروابط موقّعة بعد اعتماد الطلب.
 
 ## 📤 Git
 

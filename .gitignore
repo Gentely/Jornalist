@@ -40,6 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Supabase local CLI state
+/supabase/.branches/
+/supabase/.temp/
+
 # UNPUBLISHED research inventory — keep private.
 # Never commit finished research texts to this (public) repository:
 # upload them to Supabase Storage private bucket "research-files" instead.
