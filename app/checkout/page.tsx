@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2, Clock3, ImagePlus, Landmark, ShoppingBag, Trash2, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";

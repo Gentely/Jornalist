@@ -18,7 +18,7 @@ export default function Header() {
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b shadow-sm">
       <div className="bg-navy-900 text-white text-xs">
         <div className="mx-auto max-w-7xl px-4 h-9 flex items-center justify-between gap-3">
-          <p className="truncate">📍 {SITE.location} • بحوث موثقة PDF / Word من جامعات ليبية</p>
+          <p className="truncate">{SITE.location} • بحوث Word موثقة بأغلفة ونبذة واضحة قبل الطلب</p>
           <div className="hidden md:flex items-center gap-4 shrink-0">
             <a className="hover:text-gold-400" href={`mailto:${SITE.email}`}>{SITE.email}</a>
             <a className="hover:text-green-300 font-bold" dir="ltr" href={SITE.whatsappUrl} target="_blank" rel="noreferrer">{SITE.whatsappDisplay}</a>

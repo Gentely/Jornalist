@@ -47,9 +47,24 @@ export default function AdminPage() {
   const addResearch = (e: React.FormEvent) => {
     e.preventDefault();
     const item: Research = {
-      id: `res-${Date.now()}`, title: f.title, category: f.category, university: f.university, fileType: f.fileType as "PDF" | "WORD",
-      priceLYD: Number(f.price) || 100, pages: Number(f.pages) || 80, year: Number(f.year) || 2025, level: f.level as Research["level"],
-      rating: 4.5, downloads: 0, language: "العربية", abstract: f.abstract || "بحث مضاف حديثاً من لوحة الإدارة.", gradient: "from-[#0F2A4A] to-[#16406E]",
+      id: `res-${Date.now()}`,
+      title: f.title,
+      summary: f.abstract ? f.abstract.slice(0, 220) : "نبذة مختصرة ستضيفها الإدارة قبل نشر البحث في القائمة.",
+      category: f.category,
+      group: f.category.includes("TESOL") ? "TESOL — اللغة الإنجليزية" : f.category.startsWith("سرطان") ? "أمراض السرطان" : "بحوث طبية عامة",
+      university: f.university,
+      fileType: f.fileType as "PDF" | "WORD",
+      priceLYD: Number(f.price) || 100,
+      pages: Number(f.pages) || 80,
+      words: 0,
+      year: Number(f.year) || 2026,
+      level: f.level,
+      rating: 0,
+      downloads: 0,
+      language: "العربية",
+      abstract: f.abstract || "بحث مضاف حديثاً من لوحة الإدارة.",
+      cover: "/covers/01-amr.jpg",
+      gradient: "from-[#0F2A4A] to-[#16406E]",
       chapters: ["الفصل الأول: الإطار العام للدراسة", "الفصل الثاني: الإطار النظري", "الفصل الثالث: منهجية الدراسة", "الفصل الرابع: النتائج", "الفصل الخامس: التوصيات"],
     };
     const next = [item, ...extra]; setExtra(next);

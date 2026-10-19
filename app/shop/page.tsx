@@ -1,84 +1,98 @@
 "use client";
+
 import * as React from "react";
 import { Suspense } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Filter, SearchX, SlidersHorizontal } from "lucide-react";
-import ResearchCard from "@/components/ResearchCard";
-import { Input } from "@/components/ui/input";
+import { BookOpenCheck, Search, SearchX } from "lucide-react";
+import { ResearchListItem } from "@/components/ResearchCard";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, RESEARCHES, UNIVERSITIES } from "@/lib/data";
-
-const selectCls = "h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm font-bold text-navy-900 focus:outline-none focus:ring-2 focus:ring-navy-600/30";
+import { Input } from "@/components/ui/input";
+import { GROUPS, RESEARCHES } from "@/lib/data";
+import { cn } from "@/lib/utils";
 
 function ShopInner() {
   const params = useSearchParams();
-  const [q, setQ] = React.useState("");
-  const [category, setCategory] = React.useState(params.get("category") || "all");
-  const [fileType, setFileType] = React.useState("all");
-  const [university, setUniversity] = React.useState("all");
-  const [level, setLevel] = React.useState("all");
-  const [sort, setSort] = React.useState("popular");
+  const [query, setQuery] = React.useState("");
+  const [group, setGroup] = React.useState(params.get("group") || params.get("category") || "all");
 
   const filtered = React.useMemo(() => {
-    let list = RESEARCHES.filter((r) =>
-      (category === "all" || r.category === category) &&
-      (fileType === "all" || r.fileType === fileType) &&
-      (university === "all" || r.university === university) &&
-      (level === "all" || r.level === level) &&
-      (q.trim() === "" || r.title.includes(q.trim()) || r.category.includes(q.trim()) || r.university.includes(q.trim()))
-    );
-    if (sort === "price-asc") list = [...list].sort((a, b) => a.priceLYD - b.priceLYD);
-    if (sort === "price-desc") list = [...list].sort((a, b) => b.priceLYD - a.priceLYD);
-    if (sort === "rating") list = [...list].sort((a, b) => b.rating - a.rating);
-    if (sort === "popular") list = [...list].sort((a, b) => b.downloads - a.downloads);
-    if (sort === "newest") list = [...list].sort((a, b) => b.year - a.year);
-    return list;
-  }, [q, category, fileType, university, level, sort]);
+    const term = query.trim().toLowerCase();
+    return RESEARCHES.filter((research) => {
+      const inGroup = group === "all" || research.group === group || research.category === group;
+      const inSearch = !term || `${research.title} ${research.summary} ${research.category} ${research.group}`.toLowerCase().includes(term);
+      return inGroup && inSearch;
+    });
+  }, [group, query]);
 
-  const reset = () => { setQ(""); setCategory("all"); setFileType("all"); setUniversity("all"); setLevel("all"); };
+  const reset = () => {
+    setGroup("all");
+    setQuery("");
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="text-3xl font-black text-navy-900">مكتبة البحوث</h1>
-      <p className="text-slate-500 mt-2 text-sm">بحوث PDF و Word موثقة من جامعات ليبية • جميع الأسعار بالدينار الليبي (LYD)</p>
+    <div className="mx-auto max-w-6xl px-4 py-10">
+      <div className="text-center">
+        <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-navy-800 text-gold-400 shadow-soft"><BookOpenCheck className="h-7 w-7" /></span>
+        <h1 className="text-3xl font-black text-navy-900 sm:text-4xl">قائمة البحوث العلمية</h1>
+        <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+          ابحث بكل بساطة: شاهد صورة الغلاف، واقرأ عنوان البحث ونبذته المختصرة، ثم اختر الطلب والدفع عندما تكون جاهزاً. جميع الأسعار بالدينار الليبي.
+        </p>
+      </div>
 
-      <div className="mt-7 rounded-2xl bg-white border shadow-card p-4 sm:p-5">
-        <p className="font-black text-navy-900 flex items-center gap-2 mb-4"><SlidersHorizontal className="h-5 w-5 text-gold-500" /> تصفية النتائج</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-6 gap-3">
-          <div className="lg:col-span-2"><Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="🔍 ابحث بعنوان البحث أو التخصص..." /></div>
-          <select className={selectCls} value={category} onChange={(e) => setCategory(e.target.value)} aria-label="الفئة">
-            <option value="all">كل الفئات</option>{CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select className={selectCls} value={fileType} onChange={(e) => setFileType(e.target.value)} aria-label="نوع الملف">
-            <option value="all">نوع الملف: الكل</option><option value="PDF">PDF</option><option value="WORD">WORD (Word)</option>
-          </select>
-          <select className={selectCls} value={university} onChange={(e) => setUniversity(e.target.value)} aria-label="الجامعة">
-            <option value="all">كل الجامعات</option>{UNIVERSITIES.map((u) => <option key={u} value={u}>{u}</option>)}
-          </select>
-          <select className={selectCls} value={sort} onChange={(e) => setSort(e.target.value)} aria-label="الترتيب">
-            <option value="popular">الأكثر تحميلاً</option><option value="newest">الأحدث</option><option value="rating">الأعلى تقييماً</option><option value="price-asc">السعر: الأقل</option><option value="price-desc">السعر: الأعلى</option>
-          </select>
+      {/* بحث واحد وأزرار فئات قليلة؛ بلا قوائم أو فلاتر معقدة */}
+      <div className="mx-auto mt-7 max-w-3xl">
+        <div className="relative">
+          <Search className="pointer-events-none absolute start-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="اكتب كلمة من عنوان البحث... السكري، الرئة، TESOL" className="h-13 rounded-2xl bg-white ps-12 text-base shadow-card" />
         </div>
-        <div className="flex flex-wrap items-center gap-2 mt-4">
-          <Filter className="h-4 w-4 text-slate-400" />
-          {["all","ماجستير","دكتوراه","بكالوريوس"].map((l) => (
-            <button key={l} onClick={() => setLevel(l)} className={`px-3.5 py-1.5 rounded-full text-xs font-black border transition ${level === l ? "bg-navy-800 text-white border-navy-800" : "bg-white text-navy-800 border-slate-300 hover:bg-slate-50"}`}>{l === "all" ? "كل المستويات" : l}</button>
+        <div className="mt-4 flex flex-wrap justify-center gap-2" aria-label="اختر نوع البحث">
+          {GROUPS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setGroup(item.id)}
+              className={cn(
+                "rounded-full border px-4 py-2 text-sm font-black transition",
+                group === item.id ? "border-navy-800 bg-navy-800 text-white shadow-soft" : "border-slate-300 bg-white text-navy-800 hover:bg-navy-50",
+              )}
+            >
+              {item.label}
+            </button>
           ))}
-          <span className="ms-auto flex items-center gap-3"><span className="text-xs font-bold text-slate-500">{filtered.length} بحثاً</span><Button size="sm" variant="ghost" onClick={reset}>إعادة تعيين</Button></span>
         </div>
+        <p className="mt-4 text-center text-xs font-bold text-slate-500">تظهر الآن {filtered.length} من بحوث الدفعة الأولى</p>
+      </div>
+
+      <div className="mx-auto mt-5 max-w-3xl rounded-2xl border border-green-200 bg-green-50 p-4 text-center text-sm font-bold leading-7 text-green-900">
+        خطوات الطلب: ① اقرأ النبذة ② اضغط «اطلب وادفع الآن» أو واتساب ③ حوّل من «حساب الدفع» وارفع الإيصال.
       </div>
 
       {filtered.length === 0 ? (
-        <div className="mt-10 rounded-3xl bg-white border p-14 text-center">
-          <SearchX className="h-14 w-14 mx-auto text-slate-300 mb-3" />
-          <h2 className="font-black text-xl text-navy-900">لا توجد نتائج مطابقة</h2>
-          <p className="text-sm text-slate-500 mt-2">جرّب تغيير الفلاتر، أو اطلب بحثك مخصصاً وسنجهزه لك.</p>
-          <div className="mt-5 flex justify-center gap-2"><Button variant="outline" onClick={reset}>إعادة التعيين</Button><Button asChild><a href="/custom-request">طلب بحث مخصص</a></Button></div>
+        <div className="mx-auto mt-8 max-w-2xl rounded-3xl border bg-white p-12 text-center shadow-card">
+          <SearchX className="mx-auto mb-3 h-14 w-14 text-slate-300" />
+          <h2 className="text-xl font-black text-navy-900">لم نجد بحثاً بهذه الكلمة</h2>
+          <p className="mt-2 text-sm text-slate-500">جرّب كلمة أبسط، أو أرسل موضوعك كبحث مخصص.</p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Button type="button" variant="outline" onClick={reset}>عرض كل البحوث</Button>
+            <Button asChild><Link href="/custom-request">اطلب بحثاً مخصصاً</Link></Button>
+          </div>
         </div>
       ) : (
-        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">{filtered.map((r) => <ResearchCard key={r.id} r={r} />)}</div>
+        <div className="mt-8 space-y-5" aria-label="البحوث مرتبة واحداً تحت الآخر">
+          {filtered.map((research) => <ResearchListItem key={research.id} r={research} />)}
+        </div>
       )}
+
+      <div className="mt-10 rounded-3xl bg-navy-800 p-7 text-center text-white">
+        <h2 className="text-xl font-black">لم تجد موضوعك في هذه القائمة؟</h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-7 text-slate-300">أرسل العنوان والتخصص وعدد الصفحات المطلوب، وسنتواصل معك عبر واتساب بعرض واضح قبل البدء.</p>
+        <Button asChild variant="gold" size="lg" className="mt-5"><Link href="/custom-request">اطلب بحثاً مخصصاً</Link></Button>
+      </div>
     </div>
   );
 }
-export default function ShopPage() { return <Suspense fallback={<div className="p-16 text-center font-bold">جاري التحميل...</div>}><ShopInner /></Suspense>; }
+
+export default function ShopPage() {
+  return <Suspense fallback={<div className="p-16 text-center font-bold text-navy-900">جارٍ تحميل قائمة البحوث...</div>}><ShopInner /></Suspense>;
+}

@@ -17,17 +17,28 @@ create table if not exists public.profiles (
 
 create table if not exists public.researches (
   id uuid primary key default gen_random_uuid(),
-  title text not null, category text not null, university text not null,
+  slug text unique,
+  title text not null,
+  short_summary text,
+  research_group text,
+  category text not null,
+  university text not null default 'مراجعة أدبية موثقة',
   file_type text not null check (file_type in ('PDF','WORD')),
   price_lyd numeric(10,2) not null check (price_lyd >= 0),
-  old_price_lyd numeric(10,2), pages int, year int, level text not null default 'ماجستير',
-  rating numeric(2,1) default 4.5, downloads int not null default 0,
+  old_price_lyd numeric(10,2), pages int, word_count int, year int, level text not null default 'مراجعة أدبية',
+  rating numeric(2,1) default 0, downloads int not null default 0,
   language text default 'العربية', abstract text, chapters jsonb default '[]',
-  cover_path text,          -- Supabase Storage: covers/<id>.jpg (public)
-  file_path  text not null, -- Supabase Storage: research-files/<id>.pdf|.docx (PRIVATE, signed URLs)
+  cover_path text,          -- Supabase Storage: covers/<slug>.jpg (public)
+  file_path  text not null, -- Supabase Storage: research-files/<slug>.pdf|.docx (PRIVATE, signed URLs)
   featured boolean default false, best_seller boolean default false,
   created_at timestamptz not null default now()
 );
+
+-- For projects created with an earlier version of this schema.
+alter table public.researches add column if not exists slug text unique;
+alter table public.researches add column if not exists short_summary text;
+alter table public.researches add column if not exists research_group text;
+alter table public.researches add column if not exists word_count int;
 
 create table if not exists public.orders (
   id uuid primary key default gen_random_uuid(),
