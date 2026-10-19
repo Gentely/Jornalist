@@ -47,6 +47,38 @@ async function readApiError(response: Response): Promise<string> {
   }
 }
 
+const NETWORK_ERROR_MESSAGE =
+  "انقطع الاتصال بالإنترنت أثناء العملية رغم إعادة المحاولة تلقائياً عدة مرات. تحقق من قوة الشبكة، واشحن الهاتف وأوقف وضع توفير الطاقة، ثم حاول مرة أخرى.";
+
+function isNetworkFailure(error: unknown): boolean {
+  // fetch() rejects with a TypeError ("Failed to fetch") when the connection
+  // drops before a response arrives — common on weak mobile networks.
+  return error instanceof TypeError;
+}
+
+function friendlyError(error: unknown, fallback: string): string {
+  if (isNetworkFailure(error)) return NETWORK_ERROR_MESSAGE;
+  return error instanceof Error ? error.message : fallback;
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function withNetworkRetry<T>(operation: () => Promise<T>, attempts = 4): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!isNetworkFailure(error) || attempt === attempts - 1) throw error;
+      await wait(900 * 2 ** attempt);
+    }
+  }
+  throw lastError;
+}
+
 export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
   const [files, setFiles] = React.useState<AdminFileRow[]>(EXPECTED_FILES);
   const [links, setLinks] = React.useState<Record<string, SignedLink>>({});

@@ -74,21 +74,42 @@ export default function AdminPage() {
         return;
       }
 
-      const response = await fetch("/api/admin/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: "no-store",
-      });
+      let response: Response | null = null;
+      let lastNetworkError: unknown = null;
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+          response = await fetch("/api/admin/orders", {
+            headers: { Authorization: `Bearer ${token}` },
+            cache: "no-store",
+          });
+          break;
+        } catch (networkError) {
+          lastNetworkError = networkError;
+          if (attempt < 2) {
+            await new Promise((resolve) => window.setTimeout(resolve, 900 * (attempt + 1)));
+          }
+        }
+      }
+      if (!response) {
+        throw lastNetworkError instanceof Error
+          ? lastNetworkError
+          : new Error("تعذر الاتصال بخادم الإدارة.");
+      }
 
       if (!response.ok) {
         const apiError = await readAdminApiError(response);
+        const status = response.status;
         setBackendMessage(apiError.message);
-        setBackendState(
-          response.status === 503 || apiError.code === "BACKEND_NOT_CONFIGURED"
+        setBackendState((prev) => {
+          // Keep a working panel on screen if a background refresh hits a
+          // transient server error; only deterministic states replace it.
+          if (prev === "ready" && status >= 500 && apiError.code !== "BACKEND_NOT_CONFIGURED") return prev;
+          return status === 503 || apiError.code === "BACKEND_NOT_CONFIGURED"
             ? "unconfigured"
-            : response.status === 401
+            : status === 401
               ? "signed-out"
-              : "forbidden",
-        );
+              : "forbidden";
+        });
         return;
       }
 
