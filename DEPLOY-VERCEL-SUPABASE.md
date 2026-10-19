@@ -23,22 +23,25 @@
    - Output Directory: اتركها افتراضية
 5. أضف المتغيرات التالية من قسم Environment Variables قبل أول نشر، إن كنت أنشأت Supabase بالفعل:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` = مفتاح **Publishable** الذي يبدأ عادة بـ `sb_publishable_`
    - `NEXT_PUBLIC_SITE_URL` = رابط موقعك النهائي بعد إنشائه
+   - إذا عرض مشروع قديم مفتاحاً باسم `anon` بدل Publishable، فيمكن وضعه بدلاً من ذلك في `NEXT_PUBLIC_SUPABASE_ANON_KEY`؛ الموقع يدعم الاسمين ولا حاجة لإدخال الاثنين.
 6. اضغط **Deploy** وانتظر ظهور رابط الموقع.
 7. افتح الصفحات التالية للاختبار: `/` و`/shop` وصفحة أي بحث و`/checkout` و`/admin` و`/login`.
 
-لا تضع `SUPABASE_SERVICE_ROLE_KEY` في أي متغير يبدأ بـ `NEXT_PUBLIC_` أبداً. المفتاح العام `ANON_KEY` هو المخصص للمتصفح مع Row Level Security.
+لا تضع `SUPABASE_SECRET_KEY` أو `SUPABASE_SERVICE_ROLE_KEY` في أي متغير يبدأ بـ `NEXT_PUBLIC_` أبداً. مفتاح Publishable (أو anon القديم) هو المخصص للمتصفح مع Row Level Security.
 
 ## ثانياً: إنشاء Supabase وتنفيذ قاعدة البيانات
 
 1. أنشئ مشروعاً جديداً في Supabase، واحفظ كلمة مرور قاعدة البيانات في مكان آمن.
 2. من **SQL Editor** نفّذ محتوى `supabase/schema.sql` أولاً.
 3. نفّذ بعد ذلك `supabase/seed-researches.sql`. سيُدخل هذا الملف بحوث الدفعة الأولى السبعة بعناوينها ونبذاتها وأسعارها ومسارات ملفاتها، ويمكن تنفيذه مرة أخرى لتحديث الصفوف نفسها بفضل `on conflict (slug)`.
-4. من **Project Settings → API** انسخ:
+4. افتح نافذة **Connect** أعلى مشروع Supabase، أو **Settings → API Keys**، ثم انسخ:
    - Project URL إلى `NEXT_PUBLIC_SUPABASE_URL`
-   - anon public key إلى `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-5. أضف المتغيرين في ملف `.env.local` محلياً، وفي إعدادات Vercel للإنتاج، ثم أعد نشر الموقع بعد تغيير المتغيرات.
+   - **Publishable key** إلى `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+   - في المشاريع القديمة فقط: مفتاح `anon` إلى `NEXT_PUBLIC_SUPABASE_ANON_KEY` بدلاً من Publishable.
+   لا تنسخ أي مفتاح يبدأ بـ `sb_secret_` إلى المتصفح أو Vercel public variables.
+5. أضف المتغيرات في ملف `.env.local` محلياً، وفي إعدادات Vercel للإنتاج، ثم أعد نشر الموقع بعد تغيير المتغيرات.
 
 ## ثالثاً: إعداد Storage ورفع الأغلفة والملفات
 

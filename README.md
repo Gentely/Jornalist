@@ -65,7 +65,7 @@ npm run start
 
 1. أنشئ مشروعاً في [supabase.com](https://supabase.com) ونفّذ `supabase/schema.sql` في SQL Editor.
 2. أنشئ Storage buckets: `covers` (عام)، `research-files` (خاص)، `receipts` (خاص).
-3. انسخ `.env.example` إلى `.env.local` وضع `NEXT_PUBLIC_SUPABASE_URL` و `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+3. انسخ `.env.example` إلى `.env.local` وضع `NEXT_PUBLIC_SUPABASE_URL` و`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ويدعم الكود أيضاً `NEXT_PUBLIC_SUPABASE_ANON_KEY` للمشاريع القديمة).
 4. بعده يعمل تسجيل الدخول فوراً؛ والتحميلات تُقدَّم بروابط موقّعة بعد اعتماد الطلب.
 
 ## 📤 Git
