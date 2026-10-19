@@ -9,6 +9,7 @@ import {
   FileWarning,
   Loader2,
   RefreshCw,
+  Upload,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,8 +52,12 @@ export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
   const [links, setLinks] = React.useState<Record<string, SignedLink>>({});
   const [loading, setLoading] = React.useState(false);
   const [busySlug, setBusySlug] = React.useState("");
+  const [uploadingSlug, setUploadingSlug] = React.useState("");
+  const [pendingSlug, setPendingSlug] = React.useState("");
   const [copiedSlug, setCopiedSlug] = React.useState("");
   const [error, setError] = React.useState("");
+  const [notice, setNotice] = React.useState("");
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const loadFiles = React.useCallback(async () => {
     if (!enabled) {
@@ -93,6 +98,53 @@ export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
     void loadFiles();
   }, [loadFiles]);
 
+  const uploadFile = async (slug: string, file: File) => {
+    setUploadingSlug(slug);
+    setError("");
+    setNotice("");
+    try {
+      const token = await getSupabaseAccessToken();
+      if (!token) throw new Error("انتهت جلسة المدير. سجّل الدخول من جديد.");
+
+      const form = new FormData();
+      form.set("file", file);
+
+      const response = await fetch(`/api/admin/files/${encodeURIComponent(slug)}/upload`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+        cache: "no-store",
+      });
+      if (!response.ok) throw new Error(await readApiError(response));
+
+      const body = (await response.json()) as { file?: AdminFileRow };
+      if (body.file) {
+        setFiles((current) =>
+          current.map((row) => (row.slug === slug ? (body.file as AdminFileRow) : row)),
+        );
+        setNotice(`✅ رُفع ملف «${body.file.title}» بنجاح إلى الحاوية الخاصة. يمكنك الآن إنشاء رابط تحميل له.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر رفع الملف.");
+    } finally {
+      setUploadingSlug("");
+      setPendingSlug("");
+    }
+  };
+
+  const pickFile = (slug: string) => {
+    setPendingSlug(slug);
+    setError("");
+    setNotice("");
+    fileInputRef.current?.click();
+  };
+
+  const onFileChosen = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null;
+    event.target.value = ""; // Allow picking the same file again after an error.
+    if (file && pendingSlug) void uploadFile(pendingSlug, file);
+  };
+
   const createLink = async (slug: string) => {
     setBusySlug(slug);
     setError("");
@@ -129,14 +181,22 @@ export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
 
   return (
     <div className="mt-6 rounded-3xl bg-white border shadow-card p-6">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".docx,.doc,.pdf,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        className="hidden"
+        onChange={onFileChosen}
+      />
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex-1 min-w-[240px]">
           <h2 className="font-black text-navy-900 text-lg flex items-center gap-2">
             <Download className="text-gold-500" /> ملفات التحميل السبعة
           </h2>
           <p className="text-xs leading-6 font-bold text-slate-500 mt-1">
-            هذه روابط مباشرة خاصة بالمدير من حاوية <span dir="ltr">research-files</span>،
-            وصالحة لمدة 5 دقائق من لحظة الإنشاء. لا تنشرها كروابط دائمة للزبائن.
+            ارفع ملفات Word من جهازك مباشرة بزر «رفع الملف» — تُحفظ في الحاوية الخاصة
+            <span dir="ltr"> research-files </span>بالاسم الصحيح تلقائياً، دون الحاجة إلى دخول Supabase.
+            وروابط التحميل هنا خاصة بالمدير وصالحة 5 دقائق من لحظة الإنشاء؛ لا تنشرها كروابط دائمة للزبائن.
           </p>
         </div>
         <Button type="button" variant="outline" onClick={() => void loadFiles()} disabled={loading || !enabled}>
@@ -148,12 +208,17 @@ export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
         <p className="mt-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-bold p-3.5">
           وضع Supabase الإنتاجي غير جاهز في هذه اللوحة بعد؛ القائمة التالية تعرض أسماء
           الملفات المطلوبة فقط. بعد ضبط مفاتيح الخادم وتسجيل دخول المدير ستظهر حالة
-          كل ملف وتعمل أزرار الروابط.
+          كل ملف وتعمل أزرار الرفع والروابط.
         </p>
       )}
       {error && (
         <p role="alert" className="mt-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-bold p-3.5">
           {error}
+        </p>
+      )}
+      {notice && (
+        <p className="mt-4 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm font-bold p-3.5">
+          {notice}
         </p>
       )}
 
@@ -183,6 +248,16 @@ export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
                 <Button
                   type="button"
                   size="sm"
+                  variant={file.exists ? "outline" : "default"}
+                  disabled={!enabled || uploadingSlug === file.slug}
+                  onClick={() => pickFile(file.slug)}
+                >
+                  {uploadingSlug === file.slug ? <Loader2 className="animate-spin" /> : <Upload />}
+                  {uploadingSlug === file.slug ? "جارٍ الرفع..." : file.exists ? "استبدال الملف" : "رفع الملف"}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
                   variant="whatsapp"
                   disabled={!enabled || !file.exists || busySlug === file.slug}
                   onClick={() => void createLink(file.slug)}
@@ -206,7 +281,7 @@ export default function AdminDownloadFiles({ enabled }: { enabled: boolean }) {
 
               {!file.exists && enabled && (
                 <p className="text-[11px] leading-5 font-bold text-amber-700 mt-3">
-                  ارفع هذا الملف في Supabase Storage داخل الحاوية الخاصة بالاسم نفسه تماماً، ثم اضغط «تحديث الحالة».
+                  اضغط «رفع الملف» واختر ملف Word لهذا البحث من جهازك، وسيُحفظ في الحاوية الخاصة بالاسم الصحيح تلقائياً.
                 </p>
               )}
               {signed && (
