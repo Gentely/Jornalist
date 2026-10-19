@@ -227,6 +227,15 @@ export interface Order {
   status: OrderStatus;
   receiptName?: string;
   receiptDataUrl?: string;
+  /** True when a real receipt exists in the private Supabase receipts bucket. */
+  hasReceipt?: boolean;
+  /** Distinguishes a real Supabase order from a local demo order. */
+  backend?: "demo" | "supabase";
+  /**
+   * Plain guest order tracking token, returned once by the order API and kept
+   * only in this customer's browser. Never returned by later API responses.
+   */
+  accessToken?: string;
   createdAt: string;
   note?: string;
 }

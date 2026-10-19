@@ -55,7 +55,7 @@ npm run start
 | `/about` | من نحن — Journalist من صبراتة بإدارة محمد أحمد محمد |
 | `/my-orders` | طلبات العميل — يفتح التحميل بعد الاعتماد |
 | `/login` | Supabase Auth (دخول/إنشاء حساب) |
-| `/admin` | لوحة الإدارة — مؤشرات، جدول طلبات مع معاينة إيصال، اعتماد/رفض، إضافة بحث (عنوان/سعر LYD/غلاف/ملف PDF-DOCX) |
+| `/admin` | لوحة الإدارة — عند ربط Supabase تتطلب حساباً بدور `admin`، وتعرض الطلبات والإيصالات الحقيقية واعتمادها/رفضها وحالة ملفات التحميل وروابط المدير الموقعة؛ وفي غياب الربط تعمل كوضع تجريبي |
 
 📚 **الدفعة الأولى:** 7 مراجعات أدبية كاملة (بحثان طب عام، و3 سرطانات، وبحثا TESOL) بأسعار مقترحة 110–140 د.ل. بيانات العرض والأغلفة في `lib/data.ts` و`public/covers/`؛ أما ملفات Word الكاملة فتُحفظ خصوصاً خارج GitHub وترفع إلى Supabase Storage الخاص.
 
@@ -65,8 +65,8 @@ npm run start
 
 1. أنشئ مشروعاً في [supabase.com](https://supabase.com)، ثم من **Project Settings → Integrations → GitHub** اربطه بالمستودع، واجعل فرع الإنتاج `main` وWorking directory هو `.`، وفعّل **Deploy to production**. عند دمج ملفات `supabase/migrations/` إلى `main` تُنشأ الجداول وسياسات RLS وتُدخل البحوث السبعة تلقائياً.
 2. حاويات Storage معرّفة في `supabase/config.toml`: `covers` (عام)، `research-files` (خاص)، `receipts` (خاص). تحقق من ظهورها بعد نجاح نشر Supabase.
-3. انسخ `.env.example` إلى `.env.local` وضع `NEXT_PUBLIC_SUPABASE_URL` و`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ويدعم الكود أيضاً `NEXT_PUBLIC_SUPABASE_ANON_KEY` للمشاريع القديمة).
-4. بعده يعمل تسجيل الدخول فوراً، وينشئ الترحيل صفاً تلقائياً لكل مستخدم جديد في `public.profiles`. التحميلات المدفوعة يجب أن تُقدَّم لاحقاً بروابط موقّعة بعد اعتماد الطلب.
+3. انسخ `.env.example` إلى `.env.local` وضع `NEXT_PUBLIC_SUPABASE_URL` و`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ويدعم الكود أيضاً `NEXT_PUBLIC_SUPABASE_ANON_KEY` للمشاريع القديمة). في Vercel أضف أيضاً `SUPABASE_SECRET_KEY` كمتغير خادم فقط لتفعيل حفظ الطلبات والإيصالات والتحميلات الموقعة؛ لا تضعه أبداً في متغير يبدأ بـ `NEXT_PUBLIC_`.
+4. بعده يعمل تسجيل الدخول فوراً، وينشئ الترحيل صفاً تلقائياً لكل مستخدم جديد في `public.profiles`. تُحفظ طلبات التحويل المصرفي وإيصالاتها في Supabase بحالة «قيد المراجعة»، وبعد اعتماد حساب له دور `admin` من `/admin` يستطيع العميل إنشاء رابط تحميل موقّع لمدة 5 دقائق من `/my-orders`.
 
 ## 📤 Git
 
