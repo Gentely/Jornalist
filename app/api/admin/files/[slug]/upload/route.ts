@@ -13,6 +13,7 @@ import {
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 // Mirrors the research-files bucket limit declared in supabase/config.toml.
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024;

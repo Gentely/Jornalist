@@ -161,29 +161,83 @@ export function assertSafeStoragePath(path: string): string {
   return normalized;
 }
 
-export async function storageObjectExists(
-  admin: SupabaseClient,
-  bucket: string,
-  path: string,
-): Promise<boolean> {
+function splitStoragePath(path: string): {
+  folder: string;
+  fileName: string;
+  safePath: string;
+} {
   const safePath = assertSafeStoragePath(path);
   const lastSlash = safePath.lastIndexOf("/");
-  const folder = lastSlash >= 0 ? safePath.slice(0, lastSlash) : "";
-  const fileName = lastSlash >= 0 ? safePath.slice(lastSlash + 1) : safePath;
+  return {
+    safePath,
+    folder: lastSlash >= 0 ? safePath.slice(0, lastSlash) : "",
+    fileName: lastSlash >= 0 ? safePath.slice(lastSlash + 1) : safePath,
+  };
+}
 
+async function listObjectNames(
+  admin: SupabaseClient,
+  bucket: string,
+  folder: string,
+): Promise<Set<string>> {
+  // NOTE: deliberately no `search` option — listing the folder and matching
+  // names ourselves avoids false negatives from the storage search filter.
   const { data, error } = await admin.storage.from(bucket).list(folder, {
-    limit: 100,
+    limit: 1000,
     offset: 0,
-    search: fileName,
   });
 
   if (error) {
     // A missing bucket is an installation state the admin files checklist can
     // display usefully as "not uploaded" instead of failing the whole list.
-    if (error.message.toLowerCase().includes("bucket not found")) return false;
+    if (error.message.toLowerCase().includes("bucket not found")) return new Set();
     throw error;
   }
-  return Boolean(data?.some((object) => object.name === fileName && object.id));
+  return new Set((data || []).filter((object) => object.id).map((object) => object.name));
+}
+
+export async function storageObjectExists(
+  admin: SupabaseClient,
+  bucket: string,
+  path: string,
+): Promise<boolean> {
+  const { folder, fileName } = splitStoragePath(path);
+  const names = await listObjectNames(admin, bucket, folder);
+  return names.has(fileName);
+}
+
+/**
+ * Returns the subset of `paths` that currently exist in the bucket, using a
+ * single list call per distinct folder instead of one call per file. The
+ * admin files checklist uses this so a slow connection has far less work to
+ * wait for.
+ */
+export async function storageExistingPaths(
+  admin: SupabaseClient,
+  bucket: string,
+  paths: string[],
+): Promise<Set<string>> {
+  const folders = new Set<string>();
+  const split = paths.map((path) => {
+    const parts = splitStoragePath(path);
+    folders.add(parts.folder);
+    return parts;
+  });
+
+  const namesByFolder = new Map<string, Set<string>>();
+  await Promise.all(
+    [...folders].map(async (folder) => {
+      namesByFolder.set(folder, await listObjectNames(admin, bucket, folder));
+    }),
+  );
+
+  const existing = new Set<string>();
+  for (const parts of split) {
+    if (namesByFolder.get(parts.folder)?.has(parts.fileName)) {
+      existing.add(parts.safePath);
+    }
+  }
+  return existing;
 }
 
 export async function createSignedDownloadUrl(
