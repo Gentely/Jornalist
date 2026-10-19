@@ -2,7 +2,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { CheckCircle2, Clock3, ImagePlus, Landmark, ShoppingBag, Trash2, UploadCloud, X } from "lucide-react";
+import { CheckCircle2, Clock3, Copy, ImagePlus, Landmark, ShoppingBag, Trash2, UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,11 @@ import { useCart } from "@/lib/cart";
 import { formatLYD, whatsappLink } from "@/lib/utils";
 import { SITE } from "@/lib/constants";
 import type { Order } from "@/lib/data";
+import { getSupabaseAccessToken } from "@/lib/auth-client";
+import { isSupabaseConfigured } from "@/lib/supabase";
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const orderLabel = (id: string) => (UUID_PATTERN.test(id) ? `JRN-${id.slice(0, 8).toUpperCase()}` : id);
 
 export default function CheckoutPage() {
   const { items, total, remove, clear } = useCart();
@@ -24,6 +29,7 @@ export default function CheckoutPage() {
   const [error, setError] = React.useState("");
   const [placed, setPlaced] = React.useState<Order | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+  const [copiedTrackingCode, setCopiedTrackingCode] = React.useState(false);
 
   const onReceipt = (f: File | null) => {
     setReceipt(f); setError("");
@@ -42,27 +48,82 @@ export default function CheckoutPage() {
     if (items.length === 0) return setError("سلتك فارغة — أضف بحثاً أولاً من المكتبة.");
     if (!name.trim() || !phone.trim() || !email.trim()) return setError("فضلاً أكمل الاسم ورقم الهاتف والبريد الإلكتروني.");
     if (!receipt) return setError("⚠️ رفع صورة إيصال التحويل إلزامي لإتمام الطلب بالتحويل المصرفي. حوّل أولاً عبر زر «حساب الدفع» ثم ارفع الإيصال.");
+    if (receipt.size > 10 * 1024 * 1024) return setError("حجم الإيصال أكبر من 10 ميغابايت. اختر صورة أصغر أو ملف PDF مضغوطاً.");
+
     setSubmitting(true);
-    const receiptDataUrl = await new Promise<string>((resolve) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(String(reader.result || ""));
-      reader.onerror = () => resolve("");
-      reader.readAsDataURL(receipt);
-    });
-    const order: Order = {
-      id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      customerName: name.trim(), phone: phone.trim(), email: email.trim(),
-      items: items.map((r) => ({ id: r.id, title: r.title, priceLYD: r.priceLYD, fileType: r.fileType })),
-      totalLYD: total, method: "bank", status: "pending", // قيد المراجعة
-      receiptName: receipt.name, receiptDataUrl: receiptDataUrl.length < 1_800_000 ? receiptDataUrl : "",
-      createdAt: new Date().toISOString().slice(0, 10), note,
-    };
+    setError("");
+
     try {
-      const old = JSON.parse(localStorage.getItem("journalist-orders") || "[]");
-      localStorage.setItem("journalist-orders", JSON.stringify([order, ...old]));
-      localStorage.setItem("journalist-my-orders", JSON.stringify([order, ...JSON.parse(localStorage.getItem("journalist-my-orders") || "[]")]));
-    } catch {}
-    setPlaced(order); clear(); setSubmitting(false);
+      if (isSupabaseConfigured) {
+        const form = new FormData();
+        form.set("customerName", name.trim());
+        form.set("phone", phone.trim());
+        form.set("email", email.trim());
+        form.set("note", note.trim());
+        form.set("items", JSON.stringify(items.map((r) => r.id)));
+        form.set("receipt", receipt);
+
+        const accessToken = await getSupabaseAccessToken();
+        const response = await fetch("/api/orders", {
+          method: "POST",
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : undefined,
+          body: form,
+        });
+
+        const body = (await response.json().catch(() => ({}))) as {
+          order?: Order;
+          error?: string;
+          code?: string;
+        };
+
+        if (!response.ok || !body.order) {
+          throw new Error(
+            body.error ||
+              "تعذر حفظ الطلب في قاعدة البيانات. تحقق من اتصالك أو أكمل الطلب عبر واتساب.",
+          );
+        }
+
+        const productionOrder = body.order;
+        try {
+          const mine: Order[] = JSON.parse(localStorage.getItem("journalist-my-orders") || "[]");
+          localStorage.setItem(
+            "journalist-my-orders",
+            JSON.stringify([productionOrder, ...mine.filter((o) => o.id !== productionOrder.id)]),
+          );
+        } catch {}
+
+        setPlaced(productionOrder);
+        clear();
+        return;
+      }
+
+      const receiptDataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => resolve("");
+        reader.readAsDataURL(receipt);
+      });
+      const order: Order = {
+        id: `ORD-${Math.floor(1000 + Math.random() * 9000)}`,
+        customerName: name.trim(), phone: phone.trim(), email: email.trim(),
+        items: items.map((r) => ({ id: r.id, title: r.title, priceLYD: r.priceLYD, fileType: r.fileType })),
+        totalLYD: total, method: "bank", status: "pending", // قيد المراجعة
+        receiptName: receipt.name, receiptDataUrl: receiptDataUrl.length < 1_800_000 ? receiptDataUrl : "",
+        backend: "demo",
+        createdAt: new Date().toISOString().slice(0, 10), note,
+      };
+      try {
+        const old = JSON.parse(localStorage.getItem("journalist-orders") || "[]");
+        localStorage.setItem("journalist-orders", JSON.stringify([order, ...old]));
+        localStorage.setItem("journalist-my-orders", JSON.stringify([order, ...JSON.parse(localStorage.getItem("journalist-my-orders") || "[]")]));
+      } catch {}
+      setPlaced(order);
+      clear();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "تعذر إرسال الطلب. حاول مرة أخرى أو أكمله عبر واتساب.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (placed) {
@@ -71,11 +132,43 @@ export default function CheckoutPage() {
         <span className="h-20 w-20 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-5"><Clock3 className="h-10 w-10" /></span>
         <Badge className="bg-amber-500 border-0 mb-3">حالة الطلب: قيد المراجعة</Badge>
         <h1 className="text-3xl font-black text-navy-900">تم استلام طلبك بنجاح ✓</h1>
-        <p className="text-slate-600 leading-8 mt-3">رقم الطلب: <strong className="text-navy-900">{placed.id}</strong> • الإجمالي: <strong>{formatLYD(placed.totalLYD)}</strong><br />
+        <p className="text-slate-600 leading-8 mt-3">مرجع الطلب: <strong className="text-navy-900">{orderLabel(placed.id)}</strong> • الإجمالي: <strong>{formatLYD(placed.totalLYD)}</strong><br />
         إيصالك (<span dir="ltr">{placed.receiptName}</span>) قيد المراجعة الآن. بعد اعتماد الإدارة سيُفتح لك التحميل في صفحة «طلباتي» وسنعلمك عبر واتساب/البريد.</p>
+        {placed.backend === "supabase" && (
+          <div className="mt-6 rounded-2xl border border-navy-100 bg-navy-50 p-4 text-right">
+            <p className="text-xs font-black text-navy-900">بيانات متابعة الطلب من جهاز آخر</p>
+            <p className="text-[11px] leading-6 font-bold text-slate-500 mt-1">
+              حُفظ الطلب تلقائياً على هذا الجهاز. للوصول إليه من جهاز آخر احفظ رقم الطلب الكامل ورمز المتابعة في مكان آمن، ولا ترسلهما في رسالة واتساب.
+            </p>
+            <label className="block text-[11px] font-black text-slate-500 mt-3">رقم الطلب الكامل</label>
+            <input readOnly dir="ltr" value={placed.id} className="mt-1 w-full rounded-lg border bg-white px-3 py-2 text-left text-xs font-bold text-navy-900" />
+            {placed.accessToken && (
+              <>
+                <label className="block text-[11px] font-black text-slate-500 mt-3">رمز متابعة الطلب</label>
+                <div className="mt-1 flex gap-2">
+                  <input readOnly dir="ltr" value={placed.accessToken} className="min-w-0 flex-1 rounded-lg border bg-white px-3 py-2 text-left text-xs font-bold text-navy-900" />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(placed.accessToken || "");
+                        setCopiedTrackingCode(true);
+                        window.setTimeout(() => setCopiedTrackingCode(false), 2500);
+                      } catch {}
+                    }}
+                  >
+                    <Copy /> {copiedTrackingCode ? "تم النسخ" : "نسخ"}
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
         <div className="flex flex-wrap justify-center gap-3 mt-7">
           <Button asChild><Link href="/my-orders">متابعة حالة طلبي</Link></Button>
-          <Button asChild variant="whatsapp"><a href={whatsappLink(`مرحباً، أرسلت الطلب ${placed.id} بالتحويل المصرفي ورفعت الإيصال. بانتظار الاعتماد.`)} target="_blank" rel="noreferrer"><WhatsAppIcon /> تأكيد عبر واتساب</a></Button>
+          <Button asChild variant="whatsapp"><a href={whatsappLink(`مرحباً، أرسلت الطلب ${orderLabel(placed.id)} بالتحويل المصرفي ورفعت الإيصال. بانتظار الاعتماد.`)} target="_blank" rel="noreferrer"><WhatsAppIcon /> تأكيد عبر واتساب</a></Button>
           <Button asChild variant="outline"><Link href="/shop">متابعة التصفح</Link></Button>
         </div>
       </div>
@@ -122,7 +215,7 @@ export default function CheckoutPage() {
                 <label htmlFor="receipt" className="mt-1 flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 hover:border-navy-600 hover:bg-navy-50 transition cursor-pointer p-8 text-center">
                   <UploadCloud className="h-10 w-10 text-slate-400" />
                   <span className="font-black text-navy-900 text-sm">اضغط لرفع صورة الإيصال</span>
-                  <span className="text-xs text-slate-400">JPG / PNG / PDF — تأكد من وضوح المبلغ ورقم العملية</span>
+                  <span className="text-xs text-slate-400">صور أو PDF حتى 10MB — تأكد من وضوح المبلغ ورقم العملية</span>
                 </label>
               ) : (
                 <div className="mt-1 rounded-2xl border-2 border-green-200 bg-green-50 p-4 flex items-center gap-4">
